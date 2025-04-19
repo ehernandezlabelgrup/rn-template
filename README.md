@@ -4,6 +4,8 @@ Template es un template de React Native diseñado para acelerar el inicio de nue
 
 ## 🛠️ Librerías incluidas
 
+- **React**: v19.0.0
+- **React Native**: v0.79.1
 - **@react-navigation/native** y **@react-navigation/native-stack**: Para la navegación entre pantallas
 - **@tanstack/react-query**: Para gestión de estado y peticiones
 - **@react-native-async-storage/async-storage**: Para almacenamiento local
@@ -69,7 +71,7 @@ Habita/
 
 ## ⚠️ Requisitos
 
-- Node.js >= 14
+- Node.js >= 18
 - React Native CLI
 - Android Studio (para desarrollo en Android)
 - Xcode (para desarrollo en iOS)
