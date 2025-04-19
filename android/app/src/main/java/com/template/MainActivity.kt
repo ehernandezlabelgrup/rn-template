@@ -1,4 +1,4 @@
-package com.habita
+package com.template
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -7,7 +7,9 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "change-id": "node ./scripts/cli.js",
+    "combo": "node ./scripts/cli.js && npx react-native clean-project"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.2",

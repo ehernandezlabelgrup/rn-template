@@ -1,4 +1,4 @@
-package com.habita
+package com.template
 
 import android.app.Application
 import com.facebook.react.PackageList

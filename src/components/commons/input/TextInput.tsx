@@ -5,7 +5,7 @@ import {
   ReturnKeyTypeOptions,
   View,
 } from 'react-native'
-import Icon from '@react-native-vector-icons/Ionicons'
+import Icon from '@react-native-vector-icons/ionicons'
 import tw from 'twrnc'
 import {IoniconsName} from '../../../share/types/icons.types'
 
