@@ -1,6 +1,8 @@
 {
-  "name": "Habita",
+  "name": "Template",
   "version": "0.0.1",
+  "description": "A template for React Native projects",
+  "repository": "https://github.com/ehernandezlabelgrup/rn-template.git",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
