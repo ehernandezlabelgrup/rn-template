@@ -1,0 +1,23 @@
+{
+  "rules": [
+    {
+      "pattern": "*",
+      "allowsDeletions": false,
+      "allowsForcePushes": false,
+      "blockCreations": true,
+      "isAdminEnforced": true,
+      "requiredApprovingReviewCount": null,
+      "requiresApprovingReviews": false,
+      "requiresCodeOwnerReviews": false,
+      "requiresCommitSignatures": false,
+      "requiresConversationResolution": false,
+      "requiresLinearHistory": false,
+      "requiresStatusChecks": false,
+      "requiresStrictStatusChecks": false,
+      "restrictsPushes": true,
+      "restrictsReviewDismissals": false,
+      "lockBranch": true,
+      "lockAllowsFetchAndMerge": true
+    }
+  ]
+}
