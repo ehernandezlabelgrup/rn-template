@@ -1,64 +1,204 @@
 #!/usr/bin/env node
 /**
  * Interfaz de línea de comandos para el script de cambio de ID
+ * Con visualización mejorada usando colores y estilos
+ * Y detección automática del ID de paquete
  */
-const path = require('path');
-const { generarPackageId, crearInterfazRL } = require('./utils');
-const { actualizarProyecto } = require('./project-updater');
+const path = require('path')
+const chalk = require('chalk')
+const boxen = require('boxen')
+const ora = require('ora')
+const Table = require('cli-table3')
+const { generarPackageId, detectarPackageId, crearInterfazRL } = require('./utils')
+const { actualizarProyecto } = require('./project-updater')
+
+// Configuración de estilos
+const estilos = {
+  titulo: chalk.bold.blue,
+  subtitulo: chalk.bold.cyan,
+  exito: chalk.bold.green,
+  error: chalk.bold.red,
+  advertencia: chalk.bold.yellow,
+  info: chalk.white,
+  resaltado: chalk.bold.white,
+  comando: chalk.italic.greenBright
+}
+
+/**
+ * Muestra un encabezado con estilo
+ * @param {string} texto - Texto del encabezado
+ */
+function mostrarEncabezado(texto) {
+  console.log(
+    boxen(estilos.titulo(texto), {
+      padding: 1,
+      margin: { top: 1, bottom: 1 },
+      borderStyle: 'round',
+      borderColor: 'blue'
+    })
+  )
+}
+
+/**
+ * Muestra un mensaje de resultado con estilo
+ * @param {Object} resultado - Objeto con los resultados de la operación
+ */
+function mostrarResultado(resultado) {
+  console.log('\n')
+  
+  // Crear tabla de resultados
+  const tabla = new Table({
+    head: [
+      estilos.subtitulo('Operación'),
+      estilos.subtitulo('Resultado')
+    ],
+    colWidths: [30, 20],
+    style: { head: [], border: [] }
+  })
+  
+  // Añadir filas a la tabla
+  tabla.push(
+    [
+      'Build.gradle',
+      resultado.gradleActualizado
+        ? estilos.exito('✓ Actualizado')
+        : estilos.advertencia('⚠ Sin cambios')
+    ],
+    [
+      'Carpetas encontradas',
+      resultado.carpetasEncontradas > 0
+        ? estilos.exito(resultado.carpetasEncontradas)
+        : estilos.advertencia('0')
+    ],
+    [
+      'Carpetas renombradas',
+      resultado.carpetasRenombradas > 0
+        ? estilos.exito(resultado.carpetasRenombradas)
+        : estilos.advertencia('0')
+    ],
+    [
+      'Archivos actualizados',
+      resultado.archivosActualizados > 0
+        ? estilos.exito(resultado.archivosActualizados)
+        : estilos.advertencia('0')
+    ]
+  )
+  
+  console.log(tabla.toString())
+  console.log('\n')
+  
+  // Mensaje de éxito o error general
+  if (
+    resultado.gradleActualizado ||
+    resultado.carpetasRenombradas > 0 ||
+    resultado.archivosActualizados > 0
+  ) {
+    console.log(
+      boxen(estilos.exito('¡Actualización completada con éxito!'), {
+        padding: 1,
+        margin: { top: 0, bottom: 1 },
+        borderStyle: 'round',
+        borderColor: 'green'
+      })
+    )
+  } else {
+    console.log(
+      boxen(
+        estilos.advertencia(
+          'Operación completada, pero no se detectaron cambios.\n' +
+          'Verifica que los IDs de paquete sean correctos.'
+        ),
+        {
+          padding: 1,
+          margin: { top: 0, bottom: 1 },
+          borderStyle: 'round',
+          borderColor: 'yellow'
+        }
+      )
+    )
+  }
+}
+
+/**
+ * Muestra los próximos pasos a seguir
+ */
+function mostrarProximosPasos() {
+  console.log(estilos.subtitulo('\n▶ Próximos pasos:'))
+  console.log(
+    `1. Limpiar el proyecto: ${estilos.comando('cd android && ./gradlew clean')}`
+  )
+  console.log(
+    `2. Compilar y ejecutar: ${estilos.comando('npx react-native run-android')}`
+  )
+  console.log('\n')
+}
 
 /**
  * Función principal para ejecutar el script
  */
 function main() {
-  const rl = crearInterfazRL();
+  // Mostrar encabezado
+  mostrarEncabezado('Cambio de ID de Paquete Android')
+
+  const rl = crearInterfazRL()
   
   // Obtener la ruta del proyecto
-  let rutaProyecto = './';  // Ruta actual
-  rutaProyecto = path.resolve(rutaProyecto);
-  console.log(`Ruta del proyecto: ${rutaProyecto}`);
+  let rutaProyecto = './' // Ruta actual
+  rutaProyecto = path.resolve(rutaProyecto)
+  console.log(`${estilos.info('Ruta del proyecto:')} ${estilos.resaltado(rutaProyecto)}`)
   
-  // ID actual fijo
-  const viejoPackageId = 'com.template';
+  // Detectar ID actual
+  const spinner = ora('Detectando ID actual del paquete...').start()
+  const viejoPackageId = detectarPackageId(rutaProyecto)
+  
+  if (viejoPackageId) {
+    spinner.succeed(`ID actual detectado: ${estilos.resaltado(viejoPackageId)}`)
+  } else {
+    spinner.fail('No se pudo detectar el ID actual')
+    console.log(estilos.error('No se pudo detectar automáticamente el ID del paquete.'))
+    rl.close()
+    return
+  }
   
   // Preguntar por el nuevo nombre
-  rl.question('Introduce el nombre del proyecto para el nuevo ID: ', (nombreProyecto) => {
+  rl.question(`${estilos.info('Introduce el nombre del proyecto para el nuevo ID:')} `, (nombreProyecto) => {
     try {
-      const nuevoPackageId = generarPackageId(nombreProyecto);
-      console.log(`\nID actual: ${viejoPackageId}`);
-      console.log(`Nuevo ID: ${nuevoPackageId}\n`);
+      const nuevoPackageId = generarPackageId(nombreProyecto)
+      console.log(`\n${estilos.info('ID actual:')} ${estilos.resaltado(viejoPackageId)}`)
+      console.log(`${estilos.info('Nuevo ID:')} ${estilos.resaltado(nuevoPackageId)}\n`)
       
       // Confirmar cambios
-      rl.question('¿Confirmar cambios? (s/n): ', (respuesta) => {
+      rl.question(`${estilos.info('¿Confirmar cambios?')} ${estilos.resaltado('(s/n):')} `, (respuesta) => {
         if (respuesta.toLowerCase() === 's') {
+          // Mostrar spinner mientras se actualiza
+          const spinnerUpdate = ora('Actualizando proyecto...').start()
+          
           // Actualizar proyecto
-          const resultado = actualizarProyecto(rutaProyecto, viejoPackageId, nuevoPackageId);
+          const resultado = actualizarProyecto(rutaProyecto, viejoPackageId, nuevoPackageId)
           
-          console.log('\n==== Resumen ====');
-          console.log(`- Build.gradle actualizado: ${resultado.gradleActualizado ? 'Sí' : 'No'}`);
-          console.log(`- Carpetas encontradas: ${resultado.carpetasEncontradas}`);
-          console.log(`- Carpetas renombradas: ${resultado.carpetasRenombradas}`);
-          console.log(`- Archivos actualizados: ${resultado.archivosActualizados}`);
+          // Detener spinner
+          spinnerUpdate.succeed('Proceso completado')
           
-          console.log('\n¡Actualización completada!');
-          console.log('Para limpiar el proyecto, ejecuta: cd android && ./gradlew clean');
-          console.log('Para compilar y probar: npx react-native run-android');
+          // Mostrar resultados
+          mostrarResultado(resultado)
+          mostrarProximosPasos()
         } else {
-          console.log('Operación cancelada.');
+          console.log(estilos.advertencia('\n▶ Operación cancelada.'))
         }
-        rl.close();
-      });
+        rl.close()
+      })
     } catch (error) {
-      console.error(`Error: ${error.message}`);
-      rl.close();
+      console.log(estilos.error(`\n▶ Error: ${error.message}`))
+      rl.close()
     }
-  });
+  })
 }
 
 // Ejecutar el script si es llamado directamente
 if (require.main === module) {
-  main();
+  main()
 }
 
 module.exports = {
   main
-};
+}

@@ -1,9 +1,20 @@
 /**
  * Módulo para actualizar archivos Java/Kotlin y estructura de carpetas
+ * Con mensajes a color
  */
-const fs = require('fs');
-const path = require('path');
-const { existeArchivo, leerArchivo, escribirArchivo } = require('./utils');
+const fs = require('fs')
+const path = require('path')
+const chalk = require('chalk')
+const { existeArchivo, leerArchivo, escribirArchivo } = require('./utils')
+
+// Estilos de colores
+const log = {
+  info: (mensaje) => console.log(chalk.blue(mensaje)),
+  exito: (mensaje) => console.log(chalk.green(`✓ ${mensaje}`)),
+  advertencia: (mensaje) => console.log(chalk.yellow(`⚠ ${mensaje}`)),
+  error: (mensaje) => console.log(chalk.red(`✗ ${mensaje}`)),
+  detalle: (mensaje) => console.log(chalk.gray(`  ${mensaje}`))
+}
 
 /**
  * Actualiza el contenido de un archivo Kotlin/Java
@@ -14,32 +25,32 @@ const { existeArchivo, leerArchivo, escribirArchivo } = require('./utils');
  */
 function actualizarContenidoArchivo(rutaArchivo, viejoPackageId, nuevoPackageId) {
   if (!existeArchivo(rutaArchivo)) {
-    return false;
+    return false
   }
   
-  let contenido = leerArchivo(rutaArchivo);
+  let contenido = leerArchivo(rutaArchivo)
   
   // Actualizar declaración de paquete
   let contenidoActualizado = contenido.replace(
     new RegExp(`package ${viejoPackageId}`, 'g'),
     `package ${nuevoPackageId}`
-  );
+  )
   
   // Actualizar imports que hacen referencia al paquete viejo
   contenidoActualizado = contenidoActualizado.replace(
     new RegExp(`import ${viejoPackageId}\\.`, 'g'),
     `import ${nuevoPackageId}.`
-  );
+  )
   
   // Verificar si hubo cambios
   if (contenido === contenidoActualizado) {
-    console.log(`No se encontraron patrones para reemplazar en ${path.basename(rutaArchivo)}`);
-    return false;
+    log.detalle(`No se encontraron patrones para reemplazar en ${path.basename(rutaArchivo)}`)
+    return false
   }
   
-  escribirArchivo(rutaArchivo, contenidoActualizado);
-  console.log(`✅ Actualizado contenido de: ${path.basename(rutaArchivo)}`);
-  return true;
+  escribirArchivo(rutaArchivo, contenidoActualizado)
+  log.exito(`Actualizado contenido de: ${path.basename(rutaArchivo)}`)
+  return true
 }
 
 /**
@@ -51,24 +62,24 @@ function actualizarContenidoArchivo(rutaArchivo, viejoPackageId, nuevoPackageId)
  */
 function procesarArchivosCarpeta(rutaCarpeta, viejoPackageId, nuevoPackageId) {
   if (!existeArchivo(rutaCarpeta)) {
-    return 0;
+    return 0
   }
   
-  console.log(`Procesando archivos en: ${rutaCarpeta}`);
-  const archivos = fs.readdirSync(rutaCarpeta);
-  let archivosActualizados = 0;
+  log.info(`Procesando archivos en: ${rutaCarpeta}`)
+  const archivos = fs.readdirSync(rutaCarpeta)
+  let archivosActualizados = 0
   
   archivos.forEach(archivo => {
     if (archivo.endsWith('.kt') || archivo.endsWith('.java')) {
-      const rutaArchivo = path.join(rutaCarpeta, archivo);
-      const actualizado = actualizarContenidoArchivo(rutaArchivo, viejoPackageId, nuevoPackageId);
+      const rutaArchivo = path.join(rutaCarpeta, archivo)
+      const actualizado = actualizarContenidoArchivo(rutaArchivo, viejoPackageId, nuevoPackageId)
       if (actualizado) {
-        archivosActualizados++;
+        archivosActualizados++
       }
     }
-  });
+  })
   
-  return archivosActualizados;
+  return archivosActualizados
 }
 
 /**
@@ -79,20 +90,22 @@ function procesarArchivosCarpeta(rutaCarpeta, viejoPackageId, nuevoPackageId) {
  */
 function encontrarCarpetaPaquete(rutaBase, paqueteParte) {
   if (!existeArchivo(rutaBase)) {
-    return null;
+    return null
   }
   
-  const rutaCom = path.join(rutaBase, 'com');
+  const rutaCom = path.join(rutaBase, 'com')
   if (!existeArchivo(rutaCom)) {
-    return null;
+    log.detalle(`Carpeta 'com' no encontrada en: ${rutaBase}`)
+    return null
   }
   
-  const rutaPaquete = path.join(rutaCom, paqueteParte);
+  const rutaPaquete = path.join(rutaCom, paqueteParte)
   if (!existeArchivo(rutaPaquete)) {
-    return null;
+    log.detalle(`Carpeta '${paqueteParte}' no encontrada en: ${rutaCom}`)
+    return null
   }
   
-  return rutaPaquete;
+  return rutaPaquete
 }
 
 /**
@@ -102,21 +115,21 @@ function encontrarCarpetaPaquete(rutaBase, paqueteParte) {
  * @returns {boolean} true si se renombró correctamente, false si hubo error
  */
 function renombrarCarpetaPaquete(rutaCarpetaVieja, nuevoPaqueteParte) {
-  const directorioBase = path.dirname(rutaCarpetaVieja);
-  const rutaCarpetaNueva = path.join(directorioBase, nuevoPaqueteParte);
+  const directorioBase = path.dirname(rutaCarpetaVieja)
+  const rutaCarpetaNueva = path.join(directorioBase, nuevoPaqueteParte)
   
   if (existeArchivo(rutaCarpetaNueva)) {
-    console.log(`⚠️ La carpeta ${rutaCarpetaNueva} ya existe. No se renombrará por seguridad.`);
-    return false;
+    log.advertencia(`La carpeta ${chalk.bold(rutaCarpetaNueva)} ya existe. No se renombrará por seguridad.`)
+    return false
   }
   
   try {
-    fs.renameSync(rutaCarpetaVieja, rutaCarpetaNueva);
-    console.log(`✅ Carpeta renombrada: ${path.basename(rutaCarpetaVieja)} -> ${nuevoPaqueteParte}`);
-    return true;
+    fs.renameSync(rutaCarpetaVieja, rutaCarpetaNueva)
+    log.exito(`Carpeta renombrada: ${chalk.bold(path.basename(rutaCarpetaVieja))} → ${chalk.bold(nuevoPaqueteParte)}`)
+    return true
   } catch (error) {
-    console.error(`Error al renombrar carpeta: ${error.message}`);
-    return false;
+    log.error(`Error al renombrar carpeta: ${error.message}`)
+    return false
   }
 }
 
@@ -128,14 +141,14 @@ function renombrarCarpetaPaquete(rutaCarpetaVieja, nuevoPaqueteParte) {
  * @returns {Object} Resultado de la operación
  */
 function actualizarEstructuraJavaKotlin(rutaProyecto, viejoPackageId, nuevoPackageId) {
-  console.log('\nActualizando estructura Java/Kotlin...');
+  log.info('\nActualizando estructura Java/Kotlin...')
   
   // Extraer las partes del paquete
-  const viejoPaquetePartes = viejoPackageId.split('.');
-  const nuevoPaquetePartes = nuevoPackageId.split('.');
+  const viejoPaquetePartes = viejoPackageId.split('.')
+  const nuevoPaquetePartes = nuevoPackageId.split('.')
   
-  const viejoPaqueteParte = viejoPaquetePartes[1]; // "habita"
-  const nuevoPaqueteParte = nuevoPaquetePartes[1]; // "nuevonombre"
+  const viejoPaqueteParte = viejoPaquetePartes[1] // "habita"
+  const nuevoPaqueteParte = nuevoPaquetePartes[1] // "nuevonombre"
   
   // Definir posibles rutas base para los archivos Java/Kotlin
   const posiblesRutasBase = [
@@ -143,34 +156,35 @@ function actualizarEstructuraJavaKotlin(rutaProyecto, viejoPackageId, nuevoPacka
     path.join(rutaProyecto, 'android', 'app', 'src', 'main', 'kotlin'),
     path.join(rutaProyecto, 'android', 'app', 'src', 'debug', 'java'),
     path.join(rutaProyecto, 'android', 'app', 'src', 'release', 'java')
-  ];
+  ]
   
   let resultado = {
     carpetasEncontradas: 0,
     carpetasRenombradas: 0,
     archivosActualizados: 0
-  };
+  }
   
   // Buscar y procesar en cada ruta posible
   posiblesRutasBase.forEach(rutaBase => {
-    const rutaPaquete = encontrarCarpetaPaquete(rutaBase, viejoPaqueteParte);
+    const rutaPaquete = encontrarCarpetaPaquete(rutaBase, viejoPaqueteParte)
     
     if (rutaPaquete) {
-      resultado.carpetasEncontradas++;
+      resultado.carpetasEncontradas++
+      log.exito(`Encontrada carpeta del paquete en: ${chalk.bold(rutaBase)}`)
       
       // Actualizar archivos dentro de la carpeta
-      const archivosActualizados = procesarArchivosCarpeta(rutaPaquete, viejoPackageId, nuevoPackageId);
-      resultado.archivosActualizados += archivosActualizados;
+      const archivosActualizados = procesarArchivosCarpeta(rutaPaquete, viejoPackageId, nuevoPackageId)
+      resultado.archivosActualizados += archivosActualizados
       
       // Renombrar la carpeta
-      const renombrado = renombrarCarpetaPaquete(rutaPaquete, nuevoPaqueteParte);
+      const renombrado = renombrarCarpetaPaquete(rutaPaquete, nuevoPaqueteParte)
       if (renombrado) {
-        resultado.carpetasRenombradas++;
+        resultado.carpetasRenombradas++
       }
     }
-  });
+  })
   
-  return resultado;
+  return resultado
 }
 
 module.exports = {
@@ -179,4 +193,4 @@ module.exports = {
   encontrarCarpetaPaquete,
   renombrarCarpetaPaquete,
   actualizarEstructuraJavaKotlin
-};
+}
