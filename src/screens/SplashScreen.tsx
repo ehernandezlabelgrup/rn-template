@@ -52,6 +52,19 @@ export default function SplashScreen() {
         iconLeft="mail"
         iconRight="checkmark-circle-outline"
       />
+      <Input
+        hint="This is a description"
+        control={control}
+        name="check"
+        label="Checkbox"
+        placeholder="Enter your checkbox"
+        rules={{
+          required: 'Checkbox is required',
+        }}
+        type="checkbox"
+
+        />
+
       <Button
         title="Submit"
         onPress={handleSubmit(data => console.log(data))}

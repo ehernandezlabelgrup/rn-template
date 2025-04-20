@@ -1,5 +1,5 @@
 import React from 'react'
-import { View } from 'react-native'
+import {View} from 'react-native'
 import {
   Controller,
   Control,
@@ -13,9 +13,10 @@ import tw from 'twrnc'
 import TextInput from './TextInput'
 import PasswordInput from './PasswordInput'
 import InputWrapper from './InputWrapper'
-import { IoniconsName } from '../../../share/types/icons.types'
+import {IoniconsName} from '../../../share/types/icons.types'
+import Checkbox from './Checkbox'
 
-type InputType = 'text' | 'email' | 'password' | 'phone' | 'number'
+type InputType = 'text' | 'email' | 'password' | 'phone' | 'number' | 'checkbox'
 
 interface InputProps<T extends FieldValues> {
   name: Path<T>
@@ -66,15 +67,14 @@ const Input = <T extends FieldValues>({
   hint,
 }: InputProps<T>) => {
   const renderInput = (field: any) => {
-    const { onChange, value, fieldState } = field
+    const {onChange, value, fieldState} = field
     if (type === 'password') {
       return (
         <InputWrapper
           label={label}
           required={!!rules?.required}
           hint={hint}
-          error={fieldState.error?.message}
-        >
+          error={fieldState.error?.message}>
           <PasswordInput
             value={value}
             onChangeText={onChange}
@@ -87,13 +87,25 @@ const Input = <T extends FieldValues>({
       )
     }
 
+    if (type === 'checkbox') {
+      return (
+        <Checkbox
+          initialValue={value}
+          onValueChange={onChange}
+          label={label}
+          hint={hint}
+          error={fieldState.error?.message}
+          required={!!rules?.required}
+        />
+      )
+    }
+
     return (
       <InputWrapper
         label={label}
         required={!!rules?.required}
         hint={hint}
-        error={fieldState.error?.message}
-      >
+        error={fieldState.error?.message}>
         <TextInput
           value={value}
           onChangeText={onChange}
@@ -115,15 +127,17 @@ const Input = <T extends FieldValues>({
       control={control}
       name={name}
       rules={rules}
-      render={({ field, fieldState, formState }) => {
-        return <View style={tw`w-full`}>
-          {renderInput({
-            ...field,
-            value: field.value || '',
-            fieldState,
-            error: formState.errors?.[name],
-          })}
-        </View>
+      render={({field, fieldState, formState}) => {
+        return (
+          <View style={tw`w-full`}>
+            {renderInput({
+              ...field,
+              value: field.value || '',
+              fieldState,
+              error: formState.errors?.[name],
+            })}
+          </View>
+        )
       }}
     />
   )
