@@ -2,7 +2,8 @@ import React from 'react'
 import {useForm} from 'react-hook-form'
 import Input from '../components/commons/input'
 import Container from '../components/commons/Container'
-import {Button} from 'react-native'
+import Button from '../components/commons/Button'
+import tw from '../lib/tailwind'
 
 export default function SplashScreen() {
   const {control, handleSubmit} = useForm()
@@ -64,11 +65,6 @@ export default function SplashScreen() {
         type="checkbox"
 
         />
-
-      <Button
-        title="Submit"
-        onPress={handleSubmit(data => console.log(data))}
-      />
     </Container>
   )
 }
