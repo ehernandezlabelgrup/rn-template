@@ -2,12 +2,10 @@ import React from 'react'
 import {useForm} from 'react-hook-form'
 import Input from '../components/commons/input'
 import Container from '../components/commons/Container'
-import Button from '../components/commons/Button'
-import tw from '../lib/tailwind'
 
 export default function SplashScreen() {
-  const {control, handleSubmit} = useForm()
-    return (
+  const {control} = useForm()
+  return (
     <Container>
       <Input
         hint="This is a description"
@@ -63,8 +61,7 @@ export default function SplashScreen() {
           required: 'Checkbox is required',
         }}
         type="checkbox"
-
-        />
+      />
     </Container>
   )
 }

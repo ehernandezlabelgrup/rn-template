@@ -18,7 +18,7 @@ export type ButtonVariant =
   | 'success'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
-interface ButtonProps {
+interface IProps {
   /** Texto a mostrar en el botón */
   label?: string
   /** Función que se ejecuta al presionar el botón */
@@ -64,7 +64,7 @@ interface ButtonProps {
  *   onPress={() => console.log('Guardado')}
  * />
  */
-const Button: React.FC<ButtonProps> = ({
+const Button: React.FC<IProps> = ({
   label,
   onPress,
   variant = 'primary',
