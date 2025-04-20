@@ -1,67 +1,86 @@
-import React from 'react'
-import {useForm} from 'react-hook-form'
-import Input from '../components/commons/input'
-import Container from '../components/commons/Container'
+import React, {useEffect} from 'react'
+import {View, Image, Animated, StatusBar, Text} from 'react-native'
+import DeviceInfo from 'react-native-device-info'
+import tw from '../lib/tailwind'
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
+import {RootStackParamList} from '../navigation'
 
-export default function SplashScreen() {
-  const {control} = useForm()
+type SplashScreenProps = NativeStackScreenProps<RootStackParamList, 'SplashScreen'>;
+
+const SplashScreen = ({ navigation }: SplashScreenProps) => {
+  const fadeAnim = React.useRef(new Animated.Value(0)).current
+  const scaleAnim = React.useRef(new Animated.Value(0.5)).current
+  const versionFadeAnim = React.useRef(new Animated.Value(0)).current
+
+  const appVersion = DeviceInfo.getVersion()
+  const buildNumber = DeviceInfo.getBuildNumber()
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 8,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.delay(300),
+      Animated.timing(versionFadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.delay(1500),
+    ]).start(() => {
+      setTimeout(() => {
+        navigation.replace('AuthStack')
+      }, 100)
+    })
+  }, [fadeAnim, scaleAnim, versionFadeAnim, navigation])
+
   return (
-    <Container>
-      <Input
-        hint="This is a description"
-        control={control}
-        name="password"
-        type="password"
-        label="Password"
-        placeholder="Enter your password"
-        rules={{
-          required: 'Password is required',
-          minLength: {
-            value: 8,
-            message: 'Password must be at least 8 characters',
+    <View style={[tw`flex-1 justify-center items-center bg-bg`]}>
+      <StatusBar hidden />
+
+      <Animated.View
+        style={[
+          tw`flex-1 justify-center items-center`,
+          {
+            opacity: fadeAnim,
+            transform: [{scale: scaleAnim}],
           },
-          maxLength: {
-            value: 20,
-            message: 'Password must be at most 20 characters',
-          },
-          pattern: {
-            value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
-            message:
-              'Password must contain at least one uppercase letter, one lowercase letter, and one number',
-          },
-        }}
-      />
-      <Input
-        hint="This is a description"
-        control={control}
-        name="email"
-        label="Email"
-        placeholder="Enter your email"
-        rules={{
-          required: 'Email is required',
-          pattern: {
-            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-            message: 'Invalid email address',
-          },
-        }}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        returnKeyType="done"
-        onSubmitEditing={() => console.log('Email submitted')}
-        iconLeft="mail"
-        iconRight="checkmark-circle-outline"
-      />
-      <Input
-        hint="This is a description"
-        control={control}
-        name="check"
-        label="Checkbox"
-        placeholder="Enter your checkbox"
-        rules={{
-          required: 'Checkbox is required',
-        }}
-        type="checkbox"
-      />
-    </Container>
+        ]}>
+        <Image
+          source={require('../assets/images/logo.jpg')}
+          style={tw`w-90 h-90`}
+          resizeMode="contain"
+        />
+
+        <Animated.View
+          style={{
+            opacity: versionFadeAnim,
+            transform: [
+              {
+                translateY: versionFadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [10, 0],
+                }),
+              },
+            ],
+          }}>
+          <Text style={tw`text-sm text-gray-500 text-center mt-4`}>
+            Versión {appVersion} ({buildNumber})
+          </Text>
+        </Animated.View>
+      </Animated.View>
+    </View>
   )
 }
+
+export default SplashScreen
